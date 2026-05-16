@@ -1,0 +1,25 @@
+[Unit]
+Description=Life Quant Dashboard — Telegram Bot
+Documentation=https://github.com/road2qnt/Project-001-Life-Quant-Dashboard
+After=network.target
+
+[Service]
+Type=simple
+User=ega
+WorkingDirectory=/home/ega/tubes/Project-001-Life-Quant-Dashboard
+EnvironmentFile=/home/ega/tubes/Project-001-Life-Quant-Dashboard/.env
+ExecStart=/usr/bin/npx tsx src/bot/index.ts
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+# Security hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=true
+ReadWritePaths=/home/ega/tubes/Project-001-Life-Quant-Dashboard/data.db
+
+[Install]
+WantedBy=multi-user.target

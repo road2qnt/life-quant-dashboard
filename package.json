@@ -3,36 +3,29 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint",
-    "bot": "tsx src/bot/index.ts"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "bot": "tsx src/bot/index.ts",
+    "cli": "tsx src/cli/log.ts",
+    "data": "tsx src/cli/data.ts",
+    "seed": "tsx src/lib/seed.ts",
+    "migrate": "drizzle-kit push",
+    "migrate:generate": "drizzle-kit generate"
   },
   "dependencies": {
     "better-sqlite3": "^12.10.0",
     "date-fns": "^4.1.0",
     "dotenv": "^17.4.2",
-    "drizzle-kit": "^0.31.10",
     "drizzle-orm": "^0.45.2",
-    "next": "16.1.1",
     "node-telegram-bot-api": "^0.67.0",
-    "react": "19.2.3",
-    "react-activity-calendar": "^3.0.5",
-    "react-dom": "19.2.3",
-    "zod": "^4.4.3",
-    "zustand": "^5.0.13"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^20",
     "@types/node-telegram-bot-api": "^0.64.14",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.1.1",
-    "tailwindcss": "^4",
-    "typescript": "^5"
+    "drizzle-kit": "^0.31.10",
+    "typescript": "^5",
+    "vitest": "^4.1.6"
   }
 }

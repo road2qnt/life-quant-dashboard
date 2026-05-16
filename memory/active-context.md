@@ -3,44 +3,54 @@ id: active-context
 type: context
 status: active
 created: 2025-01-15
-updated: 2025-05-14
+updated: 2026-05-16
 tags: [context, active]
-token_estimate: 250
+token_estimate: 350
 ---
 
 # Active Context
 
 > **Project:** Life Quant Dashboard
-> **Phase:** MVP Complete — Implementation
-> **Current Focus:** Polish, testing, and extension
+> **Phase:** Backend Complete — All P0/P1/P2 Done
+> **Current Focus:** Maintenance
 
 ## Project State
 
 - **Repository:** `git@github.com:road2qnt/Project-001-Life-Quant-Dashboard.git`
-- **Stack:** Next.js 16, TypeScript 5, Tailwind CSS 4, SQLite (better-sqlite3), Drizzle ORM, Zustand, Zod
-- **What exists:**
-  - ✅ Database schema (events, domains tables) + seed script
-  - ✅ REST API (`/api/events`, `/api/analytics/consistency/[domainId]`)
-  - ✅ SVG Heatmap (52 weeks, 5-level green scale, tooltips, month/day labels)
-  - ✅ QuickLog Widget (floating FAB with form)
-  - ✅ CLI Logger (`src/cli/log.ts` — npx tsx, positional args, interactive mode)
-  - ✅ Telegram Bot (`@life_quant_logger_bot` — polling, /start /help /domains /log)
-- **Next milestone:** Analytics dashboard (trends, correlations, insights)
+- **Stack:** TypeScript 5, SQLite (better-sqlite3), Drizzle ORM, Zod, date-fns
+- **Entry points:**
+  - `npm run bot` — Telegram bot (long-polling, 12 commands)
+  - `npm run cli` — CLI logger (positional args + interactive mode)
+  - `npm run data` — Data & analytics CLI (export, import, snapshots, correlate, review, sessions, CSV)
+  - `npm run seed` — Database seed script
+  - `npm run migrate` — Drizzle push migrations
+  - `npm test` — Vitest (73 tests)
 
-## Key Documents
+### What Exists
 
-- [Architecture Plan](../docs/ARCHITECTURE.md)
-- [Memory System Design](../docs/MEMORY-SYSTEM.md)
+- ✅ Database schema (domains, events, weekly_snapshots, correlations, agent_memory, config) + migrations + seed
+- ✅ Telegram Bot (`@life_quant_logger_bot`) — 12 commands: `/log`, `/today`, `/stats`, `/snapshots`, `/correlate`, `/review`, `/sessions`, `/domains`, `/export`, `/csv`, `/delete`, `/help`, `/start`
+- ✅ Inline keyboard for domain selection on bare `/log`
+- ✅ CLI Logger (`src/cli/log.ts`) — positional args, interactive mode, --list, --date, --time
+- ✅ Analytics engine (`src/lib/analytics/`) — consistency scoring, weekly trends, cognitive drift, cross-domain correlations (Pearson r), weekly snapshots, session analytics, LLM weekly review
+- ✅ Data export/import (JSON) — `src/lib/export.ts`, `src/lib/import.ts`, `src/cli/data.ts`
+- ✅ Data export/import (CSV) — `src/lib/export-csv.ts`, `src/lib/import-csv.ts`
+- ✅ Systemd service — installed as user service, auto-start on boot, auto-restart on crash
+- ✅ 73 tests — 7 test files across all modules
+- ✅ Memory system scaffolding — updated with every milestone
 
 ## Active Decisions
 
 - Events are append-only (immutable log)
 - Local-first with SQLite
 - Consistency scoring replaces streak counting
-- SVG heatmap (365 `<rect>` elements with tooltips)
-- Zustand for state (though components use local state for now)
 - CLI built with tsx (no build step needed)
 - Telegram bot uses long-polling (no webhook needed)
+- No frontend — all interaction via Telegram Bot and CLI
+- Weekly snapshots use upsert (onConflictDoUpdate)
+- Correlations computed on-demand, stored in DB
+- Inline keyboards reduce friction for mobile logging
+- LLM review uses OpenAI-compatible API (configurable via .env)
 
 ## Current Priorities
 
@@ -49,5 +59,5 @@ See [current-focus.md](./current-focus.md)
 ## Risks
 
 - `better-sqlite3` is native — needs build tools on deployment
-- Telegram bot runs via nohup — no auto-restart on system reboot
-- No tests written yet (manual validation only)
+- LLM review requires LLM_API_KEY in .env (not set by default)
+- No backup automation — data export is manual
