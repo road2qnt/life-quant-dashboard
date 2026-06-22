@@ -11,10 +11,16 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "incremental": true
+    "incremental": true,
+    "jsx": "preserve",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
   "include": [
     "**/*.ts",
+    "**/*.tsx",
     "**/*.mts"
   ],
   "exclude": ["node_modules"]
