@@ -48,6 +48,9 @@ bot.log
 # editor
 .obsidian/
 
+# brainstorming visual companion
+.superpowers/
+
 # vercel
 .vercel
 

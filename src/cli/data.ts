@@ -2,7 +2,7 @@
 import { exit, argv } from "process";
 import { exportAll, exportToFile, getExportStats } from "../lib/export";
 import { importFromFile } from "../lib/import";
-import { generateSnapshots, summarizeSnapshots, generateWeeklyReview, sessionReport, formatSessionReport } from "../lib/analytics";
+import { generateSnapshots, summarizeSnapshots, generateWeeklyReview, sessionReport, formatSessionReport, computeBurnoutRisk, formatBurnoutReportTerminal, detectAnomalies, formatAnomalyReportTerminal } from "../lib/analytics";
 import { computeAllCorrelations, summarizeCorrelations } from "../lib/analytics/correlations";
 import { writeFileSync } from "node:fs";
 import { exportEventsCSV, exportDomainsCSV, exportSnapshotsCSV } from "../lib/export-csv";
@@ -34,19 +34,21 @@ ${bold("Usage:")}
   npx tsx src/cli/data.ts ${dim("<command> [options]")}
 
 ${bold("Commands:")}
-  export [file]              Export all data to JSON (default: life-quant-export.json)
-  import <file>              Import data from JSON file
-  dry-run <file>             Preview import without making changes
-  snapshots [weeks]          Generate weekly consistency snapshots (default: 52)
-  correlate [domainA] [domainB]  Compute cross-domain correlations
-  review [weeks]              Generate LLM weekly review (default: 4)
-  csv-events [file]           Export events as CSV (default: events.csv)
-  csv-domains [file]          Export domains as CSV (default: domains.csv)
-  csv-snapshots [file]        Export snapshots as CSV (default: snapshots.csv)
-  sessions [domain]           Session patterns (time-of-day + day-of-week)
-  sessions [domain] [days]    Custom lookback period (default: 90)
-  csv-import <file>           Import events from CSV file
-  --help, -h                 Show this help
+  export [file]                 Export all data to JSON (default: life-quant-export.json)
+  import <file>                 Import data from JSON file
+  dry-run <file>                Preview import without making changes
+  snapshots [weeks]             Generate weekly consistency snapshots (default: 52)
+  correlate [domainA] [domainB] Compute cross-domain correlations
+  review [weeks]                Generate LLM weekly review (default: 4)
+  csv-events [file]             Export events as CSV (default: events.csv)
+  csv-domains [file]            Export domains as CSV (default: domains.csv)
+  csv-snapshots [file]          Export snapshots as CSV (default: snapshots.csv)
+  csv-import <file>             Import events from CSV file
+  sessions [domain]             Session patterns (time-of-day + day-of-week)
+  sessions [domain] [days]      Custom lookback period (default: 90)
+  burnout [domain]              Compute burnout risk score
+  anomalies [domain] [days]     Detect statistical anomalies
+  --help, -h                    Show this help
 
 ${bold("Examples:")}
   npx tsx src/cli/data.ts export
@@ -97,6 +99,26 @@ async function cmdSnapshots(weeks: number, dryRun: boolean) {
   } else {
     console.log(summarizeSnapshots(results));
     console.log(`${green("✓")} Generated ${results.length} snapshots`);
+  }
+}
+
+async function cmdBurnout(domainId?: string) {
+  console.log(`\n${bold("Computing burnout risk...")} ${dim(domainId ? `(domain: ${domainId})` : "(all domains)")}\n`);
+  const result = await computeBurnoutRisk(domainId);
+
+  console.log(formatBurnoutReportTerminal(result));
+  console.log(`${green("✓")} Risk score: ${(result.riskScore * 100).toFixed(0)}% (${result.risk})`);
+}
+
+async function cmdAnomalies(domainId?: string, days?: number) {
+  console.log(`\n${bold("Detecting anomalies...")} ${dim(domainId ? `(domain: ${domainId})` : "(all domains)")} ${dim(`(last ${days ?? 90} days)`)}\n`);
+  const result = await detectAnomalies(domainId, days);
+
+  console.log(formatAnomalyReportTerminal(result));
+  if (result.totalAnomalies > 0) {
+    console.log(`${yellow("✦")} ${result.totalAnomalies} anomaly flag${result.totalAnomalies !== 1 ? "s" : ""} found across ${result.domains.filter((d) => d.anomalyCount > 0).length} domain${result.domains.length !== 1 ? "s" : ""}`);
+  } else {
+    console.log(`${green("✓")} No anomalies detected.`);
   }
 }
 
@@ -262,6 +284,17 @@ async function main() {
     case "csv-snapshots": {
       const fp = args[1] || "snapshots.csv";
       await cmdCSV(() => exportSnapshotsCSV(), fp, "snapshots");
+      break;
+    }
+    case "burnout": {
+      const domainId = args[1];
+      await cmdBurnout(domainId);
+      break;
+    }
+    case "anomalies": {
+      const domainId = args[1];
+      const days = args[2] ? parseInt(args[2], 10) : 90;
+      await cmdAnomalies(domainId, isNaN(days) ? 90 : days);
       break;
     }
     case "sessions": {

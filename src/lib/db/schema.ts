@@ -32,7 +32,7 @@ export const events = sqliteTable(
     value: real("value").notNull(),
     note: text("note"),
     source: text("source", {
-      enum: ["manual", "cli", "telegram", "api", "integration"],
+      enum: ["manual", "cli", "telegram", "api", "integration", "web"],
     }).default("manual"),
     createdAt: text("created_at")
       .notNull()

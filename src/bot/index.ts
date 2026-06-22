@@ -17,6 +17,8 @@
  *   /correlate                    — Cross-domain correlations
  *   /review                       — LLM weekly review
  *   /sessions [domain]            — Session patterns (time/day)
+ *   /burnout [domain]            — Burnout risk assessment
+ *   /anomalies                    — Detect statistical anomalies
  *   /domains                      — List tracked domains
  *   /export                       — Export all data as JSON
  *   /csv                          — Export events as CSV
@@ -29,7 +31,7 @@ import { db, schema } from "../lib/db";
 import { eq, and, gte, lte, desc } from "drizzle-orm";
 import { config } from "dotenv";
 import { escapeHtml, bold, code, formatDateDisplay } from "./helpers";
-import { weeklyConsistencyScores, trendDirection, generateSnapshots, summarizeSnapshots } from "../lib/analytics";
+import { weeklyConsistencyScores, trendDirection, generateSnapshots, summarizeSnapshots, computeBurnoutRisk, formatBurnoutReport, detectAnomalies, formatAnomalyReport } from "../lib/analytics";
 import { computeAllCorrelations, summarizeCorrelations } from "../lib/analytics/correlations";
 import { generateWeeklyReview, sessionReport, formatSessionReport } from "../lib/analytics";
 import { exportEventsCSV } from "../lib/export-csv";
@@ -373,6 +375,8 @@ ${code("/snapshots")}                      — Generate weekly snapshots
 ${code("/correlate")}                      — Cross-domain correlations
 ${code("/review")}                         — LLM weekly review
 ${code("/sessions [domain]")}              — Session patterns
+${code("/burnout [domain]")}               — Burnout risk assessment
+${code("/anomalies")}                       — Detect anomalies
 ${code("/delete [id]")}                    — Delete/undo an event
 ${code("/help")}                           — Show this help
 
@@ -402,6 +406,8 @@ ${code("/snapshots [weeks]")}              — Generate weekly snapshots
 ${code("/correlate")}                      — Cross-domain correlations
 ${code("/review")}                         — LLM weekly review
 ${code("/sessions [domain]")}              — Session patterns
+${code("/burnout [domain]")}               — Burnout risk assessment
+${code("/anomalies")}                       — Detect anomalies
 ${code("/domains")}                        — List all domains
 ${code("/export")}                         — Export all data as JSON
 ${code("/csv")}                            — Export events as CSV
@@ -704,6 +710,27 @@ bot.onText(/^\/review(?:\s+(\d+))?$/, async (msg, match) => {
   }
 });
 
+// /burnout — Burnout risk assessment
+bot.onText(/^\/burnout(?:\s+(\S+))?$/, async (msg, match) => {
+  const chatId = msg.chat.id;
+  const domainId = match?.[1] || undefined;
+
+  try {
+    const msg1 = await bot.sendMessage(chatId, "⏳ Computing burnout risk assessment...");
+    const result = await computeBurnoutRisk(domainId);
+
+    const text = formatBurnoutReport(result);
+    const truncated = text.length > 4000 ? text.slice(0, 4000) + "…" : text;
+
+    await bot.editMessageText(truncated, {
+      chat_id: chatId, message_id: msg1.message_id, parse_mode: "HTML",
+    });
+  } catch (error) {
+    console.error("Failed to compute burnout risk:", error);
+    await bot.sendMessage(chatId, "❌ Failed to compute burnout risk.");
+  }
+});
+
 // /sessions [domain] [days] — Session analytics
 bot.onText(/^\/sessions(?:\s+(\S+))?(?:\s+(\d+))?$/, async (msg, match) => {
   const chatId = msg.chat.id;
@@ -909,10 +936,34 @@ ${code("/domains")}                        — List domains
 ${code("/export")}                         — Export data
 ${code("/csv")}                            — Export CSV
 ${code("/sessions")}                       — Session patterns
+${code("/burnout")}                        — Burnout risk
+${code("/anomalies")}                      — Detect anomalies
 ${code("/delete")}                         — Undo event
 ${code("/help")}                           — Show help`,
     { parse_mode: "HTML" }
   );
+});
+
+// /anomalies — Detect statistical anomalies
+bot.onText(/^\/anomalies(?:\s+(\S+))?(?:\s+(\d+))?$/, async (msg, match) => {
+  const chatId = msg.chat.id;
+  const domainId = match?.[1] || undefined;
+  const days = match?.[2] ? parseInt(match[2], 10) : 90;
+
+  try {
+    const msg1 = await bot.sendMessage(chatId, "⏳ Scanning for anomalies...");
+    const result = await detectAnomalies(domainId, days);
+
+    const text = formatAnomalyReport(result);
+    const truncated = text.length > 4000 ? text.slice(0, 4000) + "…" : text;
+
+    await bot.editMessageText(truncated, {
+      chat_id: chatId, message_id: msg1.message_id, parse_mode: "HTML",
+    });
+  } catch (error) {
+    console.error("Failed to detect anomalies:", error);
+    await bot.sendMessage(chatId, "❌ Failed to detect anomalies.");
+  }
 });
 
 // ─── Startup ────────────────────────────────────────────────────────────

@@ -1,15 +1,28 @@
-import Database from "better-sqlite3";
-import { drizzle } from "drizzle-orm/better-sqlite3";
+import { createClient } from "@libsql/client";
+import { drizzle } from "drizzle-orm/libsql";
 import * as schema from "./schema";
 
-const DB_PATH = process.env.DB_PATH || "data.db";
+// Local SQLite file (CLI/bot/seed) OR remote Turso (Vercel + multi-device).
+// Turso wins if TURSO_URL is set; otherwise fall back to a local file path.
+const tursoUrl = process.env.TURSO_URL;
+const tursoAuthToken = process.env.TURSO_AUTH_TOKEN;
 
-const sqlite = new Database(DB_PATH);
+if (!tursoUrl && !process.env.DB_PATH) {
+  // Default local file path for dev without Turso configured
+  process.env.DB_PATH = "data.db";
+}
 
-// Enable WAL mode for better concurrent read performance
-sqlite.pragma("journal_mode = WAL");
-// Enable foreign keys
-sqlite.pragma("foreign_keys = ON");
+// libSQL requires a URL scheme. Bare file paths need "file:" prefix.
+function toLibsqlUrl(rawPath: string): string {
+  if (/^(https?|libsql|file):/.test(rawPath)) return rawPath;
+  return `file:${rawPath}`;
+}
 
-export const db = drizzle(sqlite, { schema });
+const client = createClient(
+  tursoUrl
+    ? { url: tursoUrl, authToken: tursoAuthToken }
+    : { url: toLibsqlUrl(process.env.DB_PATH!) }
+);
+
+export const db = drizzle(client, { schema });
 export { schema };

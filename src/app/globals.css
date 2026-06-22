@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+/* ─── Light theme: Catppuccin Latte ──────────────────────── */
+:root {
+  --bg: #eff1f5;
+  --surface: #e6e9ef;
+  --surface-2: #ccd0da;
+  --border: #bcc0cc;
+  --text: #4c4f69;
+  --text-muted: #7c7f93;
+  --blue: #1e66f5;
+  --red: #d20f39;
+  --green: #40a02b;
+  --purple: #8839ef;
+  --yellow: #df8e1d;
+  --teal: #179299;
+  /* Heatmap intensity ramp (5 levels) */
+  --hm-0: #bcc0cc;
+  --hm-1: #a6d189;
+  --hm-2: #179299;
+  --hm-3: #1e66f5;
+  --hm-4: #8839ef;
+}
+
+/* ─── Dark theme: Tokyo Night ────────────────────────────── */
+[data-theme="dark"] {
+  --bg: #1a1b26;
+  --surface: #24283b;
+  --surface-2: #3b4261;
+  --border: #3b4261;
+  --text: #c0caf5;
+  --text-muted: #565f89;
+  --blue: #7aa2f7;
+  --red: #f7768e;
+  --green: #9ece6a;
+  --purple: #bb9af7;
+  --yellow: #e0af68;
+  --teal: #41a6b5;
+  /* Heatmap intensity ramp (5 levels) */
+  --hm-0: #1e2030;
+  --hm-1: #283457;
+  --hm-2: #34629e;
+  --hm-3: #41a6b5;
+  --hm-4: #7aa2f7;
+}
+
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+}
