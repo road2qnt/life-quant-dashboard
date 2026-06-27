@@ -114,3 +114,53 @@ This project explicitly rejects streak-based gamification. Instead, it measures:
 
 **Status:** Active development — MVP features operational
 **License:** MIT
+
+---
+
+## Screenshots
+
+### Dashboard Overview
+
+<!-- TODO: Add screenshot of the main dashboard showing heatmaps and charts -->
+<!-- Example: ![Dashboard Overview](screenshots/dashboard.png) -->
+
+To capture: Run `npm run dev`, open `localhost:3000`, and screenshot the main dashboard page showing the heatmap grid.
+
+### Architecture Diagram
+
+```mermaid
+flowchart TB
+    subgraph Frontend["Frontend — Next.js 16"]
+        Pages[Dashboard Pages]
+        Components[UI Components]
+        Zustand[State Management]
+    end
+
+    subgraph Backend["Backend — Next.js API"]
+        API[API Routes]
+        Actions[Server Actions]
+    end
+
+    subgraph Data["Data Layer"]
+        Drizzle[Drizzle ORM]
+        SQLite[SQLite Database]
+    end
+
+    subgraph External["External"]
+        Telegram[Telegram Bot]
+    end
+
+    Pages --> API
+    API --> Drizzle
+    Drizzle --> SQLite
+    Telegram --> API
+    Zustand --> Components
+```
+
+## Quick Start
+
+```bash
+npm install
+npm run dev
+# Open http://localhost:3000
+```
